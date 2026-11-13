@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Widget Test Site</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 720px;
+        margin: 40px auto;
+        padding: 0 16px;
+        line-height: 1.6;
+        color: #222;
+      }
+      code {
+        background: #f3f4f6;
+        padding: 2px 6px;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Acme Bakery (fake customer site)</h1>
+    <p>
+      This page simulates a third-party website that embeds the chat widget.
+      Click the 💬 bubble in the bottom-right corner to open it.
+    </p>
+    <p>
+      Make sure <code>npm run dev</code> is running and replace
+      <code>YOUR_PUBLIC_KEY</code> below with a real business public key.
+    </p>
+
+    <!-- Chat widget embed -->
+    <script
+      src="http://localhost:3000/widget.js"
+      data-key="pk_jqKtzNOMsmTHaEM_KgS0G3HaZkhvXKDV"
+      defer
+    ></script>
+  </body>
+</html>

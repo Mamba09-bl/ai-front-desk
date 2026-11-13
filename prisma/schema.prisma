@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+// The connection URL (DATABASE_URL) is set in prisma.config.ts, not here.
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  // username and email are unique case-insensitively, via the unique indexes
+  // users_username_key and users_email_key on lower(username) / lower(email).
+  // Prisma can't express those, so they live in the init migration's SQL.
+  username     String
+  email        String
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  business     Business?
+
+  @@map("users")
+}
+
+
+model Business {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+ ownerId       String   @unique @map("owner_id") @db.Uuid   // add @unique
+  owner         User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name          String   @db.VarChar(60)
+  publicKey     String   @unique @map("public_key")
+  secretKeyHash String   @unique @map("secret_key_hash")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  allowedDomains String[] @default([]) @map("allowed_domains")
+messages Message[]
+ documents Document[]
+ chunks    Chunk[]
+ leads     Lead[]
+ Bookings    Booking[]
+  @@map("businesses")
+}
+
+
+model Document {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId String   @db.Uuid
+  name       String
+  status     String   @default("processing")
+  error      String?
+  createdAt  DateTime @default(now())
+ chunks   Chunk[]
+  business Business @relation(fields: [businessId], references: [id])
+}
+
+model Chunk {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId String   @db.Uuid
+  documentId String   @db.Uuid
+  content    String
+  embedding  Unsupported("vector(1536)")?
+  createdAt  DateTime @default(now())
+ 
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+   @@index([businessId]) 
+}
+
+model Message {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId String   @db.Uuid
+  sessionId  String
+  role       String
+  content    String
+  answered   Boolean?
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
+
+  business Business @relation(fields: [businessId], references: [id])
+
+  @@index([businessId, sessionId, createdAt])
+}
+
+
+model Lead {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId String  @db.Uuid
+  sessionId  String
+  name       String
+  phone      String?
+  email      String?
+  reason     String   // "unanswered_question" | "interested" | "callback_request"
+  topic      String   // what they wanted, e.g. "braces for adults"
+  status     String   @default("new")  // "new" | "contacted" | "closed"
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  business   Business @relation(fields: [businessId], references: [id])
+
+  @@unique([businessId, sessionId])
+  @@index([businessId, createdAt])
+}
+
+
+
+model Booking {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+   businessId String  @db.Uuid
+  sessionId  String
+  name       String
+  phone      String?
+  email      String?
+  service    String
+  startTime  DateTime @db.Timestamptz(6) // stored in UTC; shown in Karachi time
+  notes      String?
+  status     String   @default("requested") // requested | confirmed | cancelled
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  business   Business @relation(fields: [businessId], references: [id])
+
+  @@index([businessId, startTime])
+  @@index([businessId, sessionId])
+}

@@ -1,0 +1,23 @@
+import { NextResponse } from "next/server";
+import { jwtVerify } from "jose";
+
+const SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
+
+export async function middleware(req) {
+  const token = req.cookies.get("token")?.value;
+  if (!token) {
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
+  try {
+    await jwtVerify(token, SECRET);
+  } catch {
+    // Expired or tampered token: send to login and clear the bad cookie
+    const res = NextResponse.redirect(new URL("/login", req.url));
+    res.cookies.delete("token");
+    return res;
+  }
+  return NextResponse.next();
+}
+export const config = {
+  matcher: ["/onboarding/:path*", "/dashboard/:path*", "/dashboard/documents"],
+};
