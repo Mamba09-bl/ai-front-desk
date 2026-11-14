@@ -5,7 +5,7 @@ import type { CurrentBusiness } from "@/lib/dal";
 
 type CopyTarget = "publicKey" | "script";
 
-const WIDGET_SRC = "https://yourapp.com/widget.js";
+const WIDGET_SRC = `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/widget.js`;
 
 export default function OverviewClient({ business }: { business: CurrentBusiness }) {
   const [copyStatus, setCopyStatus] = useState<{ target: CopyTarget; ok: boolean } | null>(null);
