@@ -2,6 +2,7 @@
 
 import { useState, type ChangeEvent, type FocusEvent, type SubmitEvent } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { AuthInput } from "@/components/auth/AuthInput";
 import { AuthShell } from "@/components/auth/AuthShell";
@@ -36,11 +37,12 @@ function validate(values: SignupInput): SignupFieldErrors {
 }
 
 export default function SignupPage() {
+  const router = useRouter();
   const [values, setValues] = useState<SignupInput>(initialValues);
   const [errors, setErrors] = useState<SignupFieldErrors>({});
   const [touched, setTouched] = useState<Partial<Record<Field, boolean>>>({});
   const [showPassword, setShowPassword] = useState(false);
-  const [status, setStatus] = useState<"idle" | "loading" | "success">("idle");
+  const [status, setStatus] = useState<"idle" | "loading">("idle");
   const [serverError, setServerError] = useState<string | null>(null);
 
   const passed = passwordChecks.filter((c) => c.test(values.password)).length;
@@ -86,7 +88,8 @@ export default function SignupPage() {
         return;
       }
 
-      setStatus("success");
+      // Keep the button in its loading state while navigating away.
+      router.replace("/onboarding");
     } catch {
       setServerError("Network error. Check your connection and try again.");
       setStatus("idle");
@@ -97,31 +100,7 @@ export default function SignupPage() {
 
   return (
     <AuthShell>
-      {status === "success" ? (
-        <div className="py-6 text-center">
-          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/15 ring-1 ring-emerald-500/40">
-            <svg className="h-7 w-7 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <h1 className="text-2xl font-semibold tracking-tight">You&apos;re in, {values.username}!</h1>
-          <p className="mt-2 text-sm text-zinc-400">
-            Your account has been created with <span className="text-zinc-200">{values.email}</span>.
-          </p>
-          <button
-            type="button"
-            onClick={() => {
-              setValues(initialValues);
-              setTouched({});
-              setStatus("idle");
-            }}
-            className="mt-8 text-sm font-medium text-violet-400 transition hover:text-violet-300"
-          >
-            Create another account
-          </button>
-        </div>
-      ) : (
-        <>
+      <>
           <div className="mb-8">
             <div className="mb-6 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-cyan-400 shadow-lg shadow-violet-500/30">
               <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -240,8 +219,7 @@ export default function SignupPage() {
               Sign in
             </Link>
           </p>
-        </>
-      )}
+      </>
     </AuthShell>
   );
 }
