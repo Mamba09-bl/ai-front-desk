@@ -47,6 +47,11 @@ export async function POST(req: Request) {
 
   // 1. Per-IP limit: one person spamming
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  console.log("RATE LIMIT DEBUG:", {
+  ip,
+  forwardedFor: req.headers.get("x-forwarded-for"),
+  sessionId: parsed.data.sessionId,
+});
 
   if (await isRateLimited(`rate-limit:ip:${ip}`, IP_LIMIT_PER_MINUTE, 60)) {
     return Response.json(
